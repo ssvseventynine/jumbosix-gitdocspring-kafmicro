@@ -1,0 +1,47 @@
+name: Build and Push Microservices to DockerHub
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        # Array matching the folder directory names of your services
+        service: [
+          'discovery-server', 
+          'api-gateway', 
+          'product-service', 
+          'order-service', 
+          'inventory-service', 
+          'notification-service', 
+          'jumbosix-ui'
+        ]
+
+    steps:
+    - name: Checkout Code Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: actions/docker-buildx-action@v3
+
+    - name: Log in to DockerHub
+      uses: actions/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and Push Service Image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./${{ matrix.service }}
+        file: ./${{ matrix.service }}/Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/jumbosix-${{ matrix.service }}:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/jumbosix-${{ matrix.service }}:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
