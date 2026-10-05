@@ -1,0 +1,115 @@
+<div style="font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px;">
+  
+  <h1 style="color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">
+    JumboSix Enterprise Retail Dashboard
+  </h1>
+
+  <!-- ==================== SECTION 1: PRODUCTS INVENTORY ==================== -->
+  <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+    <h3 style="margin-top: 0; color: #34495e;">Add New Catalog Product</h3>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+      <input type="text" [(ngModel)]="newProductName" placeholder="Product Name" 
+             style="padding: 8px; flex: 1; min-width: 150px; border: 1px solid #ccc; border-radius: 4px;" />
+      
+      <input type="text" [(ngModel)]="newProductSku" placeholder="Product SKU (e.g., LAP-M3)" 
+             style="padding: 8px; flex: 1; min-width: 150px; border: 1px solid #ccc; border-radius: 4px;" />
+      
+      <input type="number" [(ngModel)]="newProductPrice" placeholder="Price" 
+             style="padding: 8px; width: 100px; border: 1px solid #ccc; border-radius: 4px;" />
+      
+      <button (click)="onCreateProduct()" 
+              style="background: #2ecc71; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+        Save Product
+      </button>
+    </div>
+  </div>
+
+  <h3 style="color: #34495e;">Active Inventory Catalog</h3>
+  <div *ngIf="products.length === 0" style="color: #7f8c8d; font-style: italic; padding: 10px 0; margin-bottom: 30px;">
+    No products found in the catalog. Add one above to populate MySQL records!
+  </div>
+
+  <table *ngIf="products.length > 0" style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; margin-bottom: 40px;">
+    <thead>
+      <tr style="background: #34495e; color: white;">
+        <th style="padding: 12px; border: 1px solid #ddd;">Database ID</th>
+        <th style="padding: 12px; border: 1px solid #ddd;">Item Name</th>
+        <th style="padding: 12px; border: 1px solid #ddd;">Product SKU</th>
+        <th style="padding: 12px; border: 1px solid #ddd;">Unit Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of products" style="border-bottom: 1px solid #ddd;">
+        <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold; color: #7f8c8d;">{{ item.id }}</td>
+        <td style="padding: 12px; border: 1px solid #ddd;">{{ item.name }}</td>
+        <td style="padding: 12px; border: 1px solid #ddd; font-family: monospace; background: #fafafa;">{{ item.sku }}</td>
+        <td style="padding: 12px; border: 1px solid #ddd; color: #27ae60; font-weight: bold;">${{ item.price | number:'1.2-2' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <!-- ==================== SECTION 2: ORDERS MANAGEMENT ==================== -->
+  <hr style="border: 0; border-top: 2px dashed #ecf0f1; margin: 40px 0;" />
+
+  <div style="background: #fdfefe; border: 1px solid #d6dbdf; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <h3 style="margin-top: 0; color: #2c3e50;">Place Dynamic Customer Order</h3>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+      
+      <!-- Dynamic Selection Dropdown bound to live inventory records -->
+		<select [(ngModel)]="selectedProductId" style="padding: 8px; flex: 1; min-width: 200px; border: 1px solid #ccc; border-radius: 4px;">
+		  <option [value]="undefined" disabled selected>-- Select Inventory Item --</option>
+		  <option *ngFor="let p of products" [value]="p.sku">
+		    SKU: {{ p.sku }} | {{ p.name }} (${{ p.price }})
+		  </option>
+		</select>
+      
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <label style="font-weight: bold; color: #7f8c8d;">Qty:</label>
+        <input type="number" [(ngModel)]="orderQuantity" min="1" 
+               style="padding: 8px; width: 70px; border: 1px solid #ccc; border-radius: 4px;" />
+      </div>
+      
+      <button (click)="onPlaceOrder()" 
+              style="background: #3498db; color: white; border: none; padding: 8px 25px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+        Submit Order Request
+      </button>
+    </div>
+  </div>
+
+  <h3 style="color: #2c3e50;">Order Processing Log (Kafka Fulfilled)</h3>
+  <div *ngIf="orders.length === 0" style="color: #7f8c8d; font-style: italic; padding: 10px 0;">
+    No purchase processing entries found. Place an order above to execute message pipeline!
+  </div>
+
+  <table *ngIf="orders.length > 0" style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px;">
+    <thead>
+      <tr style="background: #2c3e50; color: white;">
+        <th style="padding: 12px; border: 1px solid #ddd;">Order ID</th>
+        <th style="padding: 12px; border: 1px solid #ddd;">Target Product ID</th>
+        <th style="padding: 12px; border: 1px solid #ddd;">Quantity Purchased</th>
+        <th style="padding: 12px; border: 1px solid #ddd;">Total Cost</th>
+        <th style="padding: 12px; border: 1px solid #ddd;">Pipeline Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let ord of orders" style="border-bottom: 1px solid #ddd;">
+        <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold; color: #95a5a6;">#{{ ord.id }}</td>
+        <!-- Line 89: Change ord.productId to ord.productSku -->
+		<td style="padding: 12px; border: 1px solid #ddd;">SKU Reference: {{ ord.productSku }}</td>
+        <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">{{ ord.quantity }}</td>
+		<td style="padding: 12px; border: 1px solid #ddd; color: #2c3e50; font-weight: bold;">
+		  ${{ calculateOrderTotal(ord, ord.quantity) | number:'1.2-2' }}
+		</td>
+        <td style="padding: 12px; border: 1px solid #ddd;">
+          <span [style.background]="ord.status === 'CONFIRMED' ? '#d4edda' : '#fff3cd'"
+                [style.color]="ord.status === 'CONFIRMED' ? '#155724' : '#856404'"
+                style="padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px;">
+            {{ ord.status }}
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
